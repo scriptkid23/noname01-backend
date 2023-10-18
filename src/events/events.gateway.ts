@@ -84,6 +84,29 @@ export class EventsGateway implements OnGatewayConnection, OnGatewayDisconnect {
     delete currentRoom[data.team][data.useId];
   }
 
+  @SubscribeMessage(EventTypes.PlayerReady)
+  handlePlayerReady(@ConnectedSocket() client: Socket) {
+    const player = this.gameStorage.getPlayerInRoom(client.id);
+    const currentRoom = this.gameStorage.getRoomById(player.roomId);
+
+    currentRoom.readyCount += 1;
+
+    console.log(currentRoom.readyCount);
+
+    let canPlay = false;
+
+    const playerOfRedTeam = Object.keys(currentRoom[Team.Red]).length;
+    const playerOfBlueTeam = Object.keys(currentRoom[Team.Blue]).length;
+
+    if (
+      currentRoom.readyCount === playerOfRedTeam + playerOfBlueTeam &&
+      playerOfBlueTeam + playerOfRedTeam > 1
+    ) {
+      canPlay = true;
+    }
+    this.server.emit(EventTypes.CanPlay, canPlay);
+  }
+
   handleConnection(client: any, ...args: any[]) {
     this.logger.log(`Client ${client.id} is connected`);
   }
@@ -96,6 +119,8 @@ export class EventsGateway implements OnGatewayConnection, OnGatewayDisconnect {
         if (!player) return;
 
         const room = this.gameStorage.getRoomById(player.roomId);
+        
+        room.readyCount = 0;
 
         delete room[player.team][client.id];
 

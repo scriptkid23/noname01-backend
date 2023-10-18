@@ -61,6 +61,7 @@ export class Skill {
 
 export class Room {
   [key: string]: {
+    readyCount: number;
     [team: number]: {
       [id: string]: Player;
     };
@@ -83,6 +84,7 @@ export class GameStorage {
   private constructor() {
     this.rooms = {
       room00: {
+        readyCount: 0,
         [Team.Red]: {},
         [Team.Blue]: {},
       },
@@ -119,6 +121,7 @@ export class GameStorage {
   public reset() {
     this.rooms = {
       room00: {
+        readyCount: 0,
         [Team.Red]: {},
         [Team.Blue]: {},
       },
