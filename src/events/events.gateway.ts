@@ -101,7 +101,7 @@ export class EventsGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
         client.leave(player.roomId);
 
-        client.broadcast.emit(EventTypes.PlayerLeft, player);
+        client.broadcast.emit(EventTypes.PlayerLeft, client.id);
       }
     } catch (error) {
       this.logger.error(error);
