@@ -78,7 +78,7 @@ export class GameStorage {
   private static instance: GameStorage;
 
   private rooms: Room;
-  private players: PlayerInRoom = {};
+  private playersInRoom: PlayerInRoom = {};
 
   private constructor() {
     this.rooms = {
@@ -97,14 +97,31 @@ export class GameStorage {
   }
 
   public setPlayerInRoom = (id: string, roomId: string, team: Team) => {
-    this.players[id] = { roomId: roomId, team: team };
+    this.playersInRoom[id] = { roomId: roomId, team: team };
   };
 
   public getPlayerInRoom = (id: string): { roomId: string; team: Team } => {
-    return this.players[id];
+    return this.playersInRoom[id];
   };
 
   public getRoomById = (id: string) => {
     return this.rooms[id];
   };
+
+  public getPlayersInRoom = () => {
+    return this.playersInRoom;
+  };
+
+  public getRooms() {
+    return this.rooms;
+  }
+
+  public reset() {
+    this.rooms = {
+      room00: {
+        [Team.Red]: {},
+        [Team.Blue]: {},
+      },
+    };
+  }
 }

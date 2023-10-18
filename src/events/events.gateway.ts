@@ -11,6 +11,7 @@ import {
 import { Server, Socket } from 'socket.io';
 import { EventTypes, GameSize } from 'src/constants';
 import { GameStorage, Player, Team } from 'src/storage';
+import * as _ from 'lodash';
 @WebSocketGateway({
   cors: {
     origin: '*',
@@ -34,17 +35,21 @@ export class EventsGateway implements OnGatewayConnection, OnGatewayDisconnect {
     @ConnectedSocket() client: Socket,
     @MessageBody() roomId: string,
   ) {
-    console.log('Room ID:', roomId);
+    client.join(roomId);
+
     const currentRoom = this.gameStorage.getRoomById(roomId);
 
     const playerOfRedTeam = Object.keys(currentRoom[Team.Red]).length;
     const playerOfBlueTeam = Object.keys(currentRoom[Team.Blue]).length;
+
+    let newPlayer: Player;
+
     if (
       playerOfRedTeam === playerOfBlueTeam ||
       playerOfRedTeam < playerOfBlueTeam
     ) {
       // join red team
-      const newPlayer = new Player(
+      newPlayer = new Player(
         client.id,
         GameSize.width / 2 - 150,
         GameSize.height / 2 + 150,
@@ -53,7 +58,7 @@ export class EventsGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
       this.gameStorage.setPlayerInRoom(client.id, roomId, Team.Red);
     } else {
-      const newPlayer = new Player(
+      newPlayer = new Player(
         client.id,
         GameSize.width / 2 + 150,
         GameSize.height / 2 + 150,
@@ -62,11 +67,21 @@ export class EventsGateway implements OnGatewayConnection, OnGatewayDisconnect {
       this.gameStorage.setPlayerInRoom(client.id, roomId, Team.Blue);
     }
 
-    console.log(currentRoom);
+    const players = _(currentRoom)
+      .mapKeys((d) => {
+        if (d && Object.keys(d).length > 0) {
+          return Object.keys(d)[0];
+        }
+        return undefined;
+      })
+      .pickBy((_, key) => {
+        return key !== 'undefined';
+      })
+      .value();
 
-    client.emit(EventTypes.FetchPlayers); // update players in room
+    client.emit(EventTypes.FetchPlayers, players); // update players in room
 
-    client.broadcast.emit(EventTypes.PlayerJoined); // handle for other nodes when a player just joined
+    client.to(roomId).emit(EventTypes.PlayerJoined, newPlayer); // handle for other nodes when a player just joined
   }
 
   @SubscribeMessage(EventTypes.LeaveRoom)
@@ -83,13 +98,22 @@ export class EventsGateway implements OnGatewayConnection, OnGatewayDisconnect {
   }
 
   handleDisconnect(@ConnectedSocket() client: Socket) {
-    this.logger.log(`Client ${client.id} is disconnected`);
-    const player = this.gameStorage.getPlayerInRoom(client.id);
+    try {
+      if (Object.keys(this.gameStorage.getPlayersInRoom()).length !== 0) {
+        const player = this.gameStorage.getPlayerInRoom(client.id);
 
-    const room =  this.gameStorage.getRoomById(player.roomId);
+        if (!player) return;
 
-    delete room[player.team][client.id];
+        const room = this.gameStorage.getRoomById(player.roomId);
 
-    client.broadcast.emit(EventTypes.PlayerLeft, room);
+        delete room[player.team][client.id];
+
+        client.leave(player.roomId);
+
+        client.broadcast.emit(EventTypes.PlayerLeft, player);
+      }
+    } catch (error) {
+      this.logger.error(error);
+    }
   }
 }
