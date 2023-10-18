@@ -10,7 +10,7 @@ import {
 } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
 import { EventTypes, GameSize } from 'src/constants';
-import { GameStorage, Player, Team } from 'src/storage';
+import { GameStorage, Player, Skill, SkillState, Team } from 'src/storage';
 import * as _ from 'lodash';
 import { transformToPlayers } from 'src/utils';
 @WebSocketGateway({
@@ -26,10 +26,39 @@ export class EventsGateway implements OnGatewayConnection, OnGatewayDisconnect {
   server: Server;
 
   @SubscribeMessage(EventTypes.CurrentlyAttacking)
-  handleEventCurrentlyAttacking() {}
+  handleEventCurrentlyAttacking(@ConnectedSocket() client: Socket) {
+    this.server.emit(EventTypes.ActivateCurrentlyAttacking, client.id);
+  }
 
   @SubscribeMessage(EventTypes.BeingAttacked)
   handleEventBeingAttacked() {}
+
+  @SubscribeMessage(EventTypes.InitSkill)
+  handleInitSkill(@ConnectedSocket() client: Socket) {
+    const player = this.gameStorage.getPlayerInRoom(client.id);
+
+    let skillPosition: Skill = new Skill();
+
+    if (player.team === Team.Red) {
+      skillPosition.coordinate = {
+        x: GameSize.width / 2 - 140,
+        y: GameSize.height / 2 + 85,
+      };
+      skillPosition.state = SkillState.Normal;
+      skillPosition.to = GameSize.width / 2 + 145;
+
+    } else {
+      skillPosition.coordinate = {
+        x: GameSize.width / 2 + 140,
+        y: GameSize.height / 2 + 85,
+      };
+      skillPosition.state = SkillState.Normal;
+      skillPosition.to = GameSize.width / 2 - 145
+    }
+
+
+    this.server.emit(EventTypes.SkillFrom, skillPosition);
+  }
 
   @SubscribeMessage(EventTypes.JoinRoom)
   handleJoinRoom(
@@ -92,8 +121,6 @@ export class EventsGateway implements OnGatewayConnection, OnGatewayDisconnect {
     const currentRoom = this.gameStorage.getRoomById(player.roomId);
 
     currentRoom.readyCount += 1;
-
-    console.log(currentRoom.readyCount);
 
     let canPlay = false;
 

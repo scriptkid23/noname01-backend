@@ -10,6 +10,8 @@ export enum EventTypes {
   PlayerLeft = "PLAYER_LEFF",
   PlayerReady = "PLAYER_READY",
   CanPlay = "CAN_PLAY",
+  InitSkill = 'INIT_SKILL',
+  SkillFrom = 'SKILL_FROM'
 }
 
 export const GameSize = {

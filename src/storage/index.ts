@@ -16,7 +16,7 @@ enum HealthyBarState {
   Warning,
 }
 
-enum SkillState {
+export enum SkillState {
   Normal,
   Until,
 }
@@ -59,6 +59,7 @@ class PlayerRoom {
 export class Skill {
   coordinate: Coordinate;
   state: SkillState;
+  to: number;
 }
 
 export class Room {
