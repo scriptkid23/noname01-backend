@@ -60,6 +60,7 @@ export class Skill {
   coordinate: Coordinate;
   state: SkillState;
   to: number;
+  owner: string;
 }
 
 export class Room {

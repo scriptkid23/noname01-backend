@@ -30,14 +30,13 @@ export class EventsGateway implements OnGatewayConnection, OnGatewayDisconnect {
     this.server.emit(EventTypes.ActivateCurrentlyAttacking, client.id);
   }
 
-  @SubscribeMessage(EventTypes.BeingAttacked)
-  handleEventBeingAttacked() {}
-
   @SubscribeMessage(EventTypes.InitSkill)
   handleInitSkill(@ConnectedSocket() client: Socket) {
     const player = this.gameStorage.getPlayerInRoom(client.id);
 
     let skillPosition: Skill = new Skill();
+
+    skillPosition.owner = client.id;
 
     if (player.team === Team.Red) {
       skillPosition.coordinate = {
@@ -46,16 +45,14 @@ export class EventsGateway implements OnGatewayConnection, OnGatewayDisconnect {
       };
       skillPosition.state = SkillState.Normal;
       skillPosition.to = GameSize.width / 2 + 145;
-
     } else {
       skillPosition.coordinate = {
         x: GameSize.width / 2 + 140,
         y: GameSize.height / 2 + 85,
       };
       skillPosition.state = SkillState.Normal;
-      skillPosition.to = GameSize.width / 2 - 145
+      skillPosition.to = GameSize.width / 2 - 145;
     }
-
 
     this.server.emit(EventTypes.SkillFrom, skillPosition);
   }
@@ -113,6 +110,11 @@ export class EventsGateway implements OnGatewayConnection, OnGatewayDisconnect {
   ) {
     const currentRoom = this.gameStorage.getRoomById(data.roomId);
     delete currentRoom[data.team][data.useId];
+  }
+
+  @SubscribeMessage(EventTypes.BeingAttacked)
+  handleBeingAttacked(@MessageBody() target: string) {
+    this.server.emit(EventTypes.ActivateBeingAttacked, target);
   }
 
   @SubscribeMessage(EventTypes.PlayerReady)
