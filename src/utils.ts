@@ -30,15 +30,7 @@ export function generateRandomName(): string {
   return `${randomAdjective} ${randomNoun}`;
 }
 
-export function transformToPlayers(room: {
-  [team: number]: {
-    [id: string]: Player;
-  };
-}): { [id: string]: Player } {
-  let result = {};
-  for (let i in Object.keys(room)) {
-    _.merge(result, _.pick(room[i], Object.keys(room[i])));
-  }
-
-  return result;
+export function transformToPlayers(room) {
+  const result = _.flatMap(room, (team) => _.pick(team, Object.keys(team)));
+  return _.merge({}, ...result);
 }
