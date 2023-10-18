@@ -33,12 +33,14 @@ export class Player {
   healthyBarState: HealthyBarState;
   healthy: number;
   name: string;
+  team: Team;
 
-  constructor(id: string, x: number, y: number, name?: string) {
+  constructor(id: string, x: number, y: number, team: Team, name?: string) {
     this.state = PlayerState.Idle;
     this.id = id;
     this.name = generateRandomName();
-
+    this.team = team;
+    
     this.coordinate = {
       x: x,
       y: y,

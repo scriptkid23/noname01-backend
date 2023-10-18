@@ -53,7 +53,8 @@ export class EventsGateway implements OnGatewayConnection, OnGatewayDisconnect {
       newPlayer = new Player(
         client.id,
         GameSize.width / 2 - 150,
-        GameSize.height / 2 + 150,
+        GameSize.height / 2 + 80,
+        Team.Red,
       );
       currentRoom[Team.Red][client.id] = newPlayer;
 
@@ -62,7 +63,8 @@ export class EventsGateway implements OnGatewayConnection, OnGatewayDisconnect {
       newPlayer = new Player(
         client.id,
         GameSize.width / 2 + 150,
-        GameSize.height / 2 + 150,
+        GameSize.height / 2 + 80,
+        Team.Blue,
       );
       currentRoom[Team.Blue][client.id] = newPlayer;
       this.gameStorage.setPlayerInRoom(client.id, roomId, Team.Blue);
@@ -119,7 +121,7 @@ export class EventsGateway implements OnGatewayConnection, OnGatewayDisconnect {
         if (!player) return;
 
         const room = this.gameStorage.getRoomById(player.roomId);
-        
+
         room.readyCount = 0;
 
         delete room[player.team][client.id];
