@@ -12,6 +12,7 @@ import { Server, Socket } from 'socket.io';
 import { EventTypes, GameSize } from 'src/constants';
 import { GameStorage, Player, Team } from 'src/storage';
 import * as _ from 'lodash';
+import { transformToPlayers } from 'src/utils';
 @WebSocketGateway({
   cors: {
     origin: '*',
@@ -67,17 +68,7 @@ export class EventsGateway implements OnGatewayConnection, OnGatewayDisconnect {
       this.gameStorage.setPlayerInRoom(client.id, roomId, Team.Blue);
     }
 
-    const players = _(currentRoom)
-      .mapKeys((d) => {
-        if (d && Object.keys(d).length > 0) {
-          return Object.keys(d)[0];
-        }
-        return undefined;
-      })
-      .pickBy((_, key) => {
-        return key !== 'undefined';
-      })
-      .value();
+    const players = transformToPlayers(currentRoom);
 
     client.emit(EventTypes.FetchPlayers, players); // update players in room
 

@@ -78,7 +78,7 @@ export class GameStorage {
   private static instance: GameStorage;
 
   private rooms: Room;
-  private playersInRoom: PlayerInRoom = {};
+  private playersInRoom: PlayerInRoom = {}; // using for leave room
 
   private constructor() {
     this.rooms = {
