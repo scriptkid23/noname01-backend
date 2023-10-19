@@ -11,7 +11,8 @@ export enum EventTypes {
   PlayerReady = "PLAYER_READY",
   CanPlay = "CAN_PLAY",
   InitSkill = 'INIT_SKILL',
-  SkillFrom = 'SKILL_FROM'
+  SkillFrom = 'SKILL_FROM',
+  Loser = "LOSER",
 }
 
 export const GameSize = {

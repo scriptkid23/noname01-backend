@@ -58,30 +58,35 @@ export class EventsGateway implements OnGatewayConnection, OnGatewayDisconnect {
   }
 
   @SubscribeMessage(EventTypes.InitSkill)
-  handleInitSkill(@ConnectedSocket() client: Socket) {
-    const player = this.gameStorage.getPlayerInRoom(client.id);
+  handleInitSkill(
+    @ConnectedSocket() client: Socket,
+    @MessageBody()
+    data: { playerCoordinateX: number; playerCoordinateY: number },
+  ) {
+    console.log(data);
+    // const player = this.gameStorage.getPlayerInRoom(client.id);
 
-    let skillPosition: Skill = new Skill();
+    // let skillPosition: Skill = new Skill();
 
-    skillPosition.owner = client.id;
+    // skillPosition.owner = client.id;
 
-    if (player.team === Team.Red) {
-      skillPosition.coordinate = {
-        x: GameSize.width / 2 - 140,
-        y: GameSize.height / 2 + 85,
-      };
-      skillPosition.state = SkillState.Normal;
-      skillPosition.to = GameSize.width / 2 + 145;
-    } else {
-      skillPosition.coordinate = {
-        x: GameSize.width / 2 + 140,
-        y: GameSize.height / 2 + 85,
-      };
-      skillPosition.state = SkillState.Normal;
-      skillPosition.to = GameSize.width / 2 - 145;
-    }
+    // if (player.team === Team.Red) {
+    //   skillPosition.coordinate = {
+    //     x: GameSize.width / 2 - 140,
+    //     y: GameSize.height / 2 + 85,
+    //   };
+    //   skillPosition.state = SkillState.Normal;
+    //   skillPosition.to = GameSize.width / 2 + 145;
+    // } else {
+    //   skillPosition.coordinate = {
+    //     x: GameSize.width / 2 + 140,
+    //     y: GameSize.height / 2 + 85,
+    //   };
+    //   skillPosition.state = SkillState.Normal;
+    //   skillPosition.to = GameSize.width / 2 - 145;
+    // }
 
-    this.server.emit(EventTypes.SkillFrom, skillPosition);
+    client.emit(EventTypes.SkillFrom);
   }
 
   @SubscribeMessage(EventTypes.JoinRoom)
@@ -140,8 +145,21 @@ export class EventsGateway implements OnGatewayConnection, OnGatewayDisconnect {
   }
 
   @SubscribeMessage(EventTypes.BeingAttacked)
-  handleBeingAttacked(@MessageBody() target: string) {
-    this.server.emit(EventTypes.ActivateBeingAttacked, target);
+  handleBeingAttacked(@ConnectedSocket() client: Socket) {
+    const player = this.gameStorage.getPlayerInRoom(client.id);
+    const currentRoom = this.gameStorage.getRoomById(player.roomId);
+
+    currentRoom[player.team][client.id].healthy -= 10;
+
+    if (currentRoom[player.team][client.id].healthy === 0) {
+      this.server.emit(EventTypes.Loser, client.id);
+      return;
+    }
+
+    this.server.emit(
+      EventTypes.ActivateBeingAttacked,
+      transformToPlayers(currentRoom),
+    );
   }
 
   @SubscribeMessage(EventTypes.PlayerReady)
