@@ -27,7 +27,34 @@ export class EventsGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
   @SubscribeMessage(EventTypes.CurrentlyAttacking)
   handleEventCurrentlyAttacking(@ConnectedSocket() client: Socket) {
-    this.server.emit(EventTypes.ActivateCurrentlyAttacking, client.id);
+    const currentPlayer = this.gameStorage.getPlayerInRoom(client.id);
+
+    let skill: Skill = new Skill();
+
+    skill.owner = client.id;
+
+    if (currentPlayer.team === Team.Red) {
+      skill.coordinate = {
+        x: GameSize.width / 2 - 140,
+        y: GameSize.height / 2 + 85,
+      };
+      skill.state = SkillState.Normal;
+      skill.to = GameSize.width / 2 + 145;
+    } else {
+      skill.coordinate = {
+        x: GameSize.width / 2 + 140,
+        y: GameSize.height / 2 + 85,
+      };
+      skill.state = SkillState.Normal;
+      skill.to = GameSize.width / 2 - 145;
+    }
+
+    client
+      .to(currentPlayer.roomId)
+      .emit(EventTypes.ActivateCurrentlyAttacking, {
+        id: client.id,
+        skill: skill,
+      });
   }
 
   @SubscribeMessage(EventTypes.InitSkill)
